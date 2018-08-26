@@ -647,12 +647,32 @@ class DAG(object):
             return (newContents.rstrip('\n'), wordDict)
 
     def display_graph(self):
+        import os
+        import pydot
+        os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
         G = self.__DAGGraph
-        graph_pos = nx.spring_layout(G)
-        nx.draw_networkx_nodes(G, graph_pos, node_size=10, node_color='blue', alpha=0.3)
-        nx.draw_networkx_edges(G, graph_pos)
-        nx.draw_networkx_labels(G, graph_pos, font_size=8, font_family='sans-serif')
-        plt.show()
+        print(self.__DAGStrings)
+    
+        graph = pydot.Dot(graph_type='digraph', rankdir='TB')
+        for node in self.__DAGGraph.nodes:
+            graph.add_node(pydot.Node(node, label=repr(self.__DAGStrings[node])))
+
+        for edge in self.__DAGGraph.edges:
+            # Reverse the edges from Zero
+            if edge[0] == 0:
+                graph.add_edge(pydot.Edge(edge[1], edge[0]))
+            elif edge[1] == 0:
+                graph.add_edge(pydot.Edge(edge[0], edge[1]))
+
+            else:
+                string1 = self.__DAGStrings[edge[0]].strip()
+                string2 = self.__DAGStrings[edge[1]].strip()
+                if len(string1) > len(string2):
+                    graph.add_edge(pydot.Edge(edge[1], edge[0]))
+                else:
+                    graph.add_edge(pydot.Edge(edge[0], edge[1]))
+
+        graph.write_png("./graph.png")
 
 # Sets the value of parameters
 def processParams(argv):
