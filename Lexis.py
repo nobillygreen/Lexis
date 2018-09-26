@@ -14,6 +14,7 @@ import time
 import subprocess
 import networkx as nx
 import matplotlib.pyplot as plt
+from copy import copy
 
 
 class SequenceType:
@@ -53,6 +54,7 @@ class DAG(object):
     __iterations = 0
 
     def __init__(self, inputFile, loadDAGFlag, chFlag=SequenceType.Character, noNewLineFlag=True):
+        self.letters_dic = {}
         if loadDAGFlag:
             self.__initFromDAG(inputFile)
         else:
@@ -78,6 +80,8 @@ class DAG(object):
             self.__separatorInts.add(self.__nextNewInt)
             self.__separatorIntsIndices.add(len(self.__concatenatedDAG)-1)
             self.__nextNewInt += 2
+
+        self.letters_dic = copy(self.__dic)
     # Loads the DAG from an external file (The file should start from 'N0' line, without cost logs)
 
     def __initFromDAG(self, inputFile):
@@ -124,7 +128,10 @@ class DAG(object):
     # ...........Main G-Lexis Algorithm Functions........
     def GLexis(self, quiet, normalRepeatType, costFunction):
         self.__quietLog = quiet
+        iteration = 0
         while True:  # Main loop
+            iteration += 1
+            print "iteration", iteration
             # Logging DAG Cost
             self.__logViaFlag(LogFlag.ConcatenationCostLog)
             self.__logViaFlag(LogFlag.EdgeCostLog)
@@ -647,11 +654,12 @@ class DAG(object):
             return (newContents.rstrip('\n'), wordDict)
 
     def display_graph(self):
+        print "writing graph to file"
         import os
         import pydot
         os.environ["PATH"] += os.pathsep + 'C:/Program Files (x86)/Graphviz2.38/bin/'
         G = self.__DAGGraph
-        print(self.__DAGStrings)
+        # print(self.__DAGStrings)
     
         graph = pydot.Dot(graph_type='digraph', rankdir='TB')
         for node in self.__DAGGraph.nodes:
@@ -757,8 +765,9 @@ if __name__ == "__main__":
 
     # If desired to see the central nodes, please uncomment the lines below
     centralNodes = g.greedyCoreID_ByTau(0.95)
-    print 'Central Nodes:'
-    for i in range(len(centralNodes)):
-        print centralNodes[i]
 
-    g.display_graph()
+    with open('../exercise/minnenCentralNodes.txt', 'w') as f:
+        for node in centralNodes:
+            line = [g.letters_dic[int(x)] for x in node.split(" ")]
+            f.write("".join(line))
+            f.write('\n')
